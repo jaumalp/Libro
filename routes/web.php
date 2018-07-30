@@ -14,3 +14,18 @@
 Route::get('/', function () {
     return view('welcome');
 });
+
+Auth::routes();
+
+Route::get('/home', 'HomeController@index')->name('home');
+
+Route::get('/pedido/{id}/user', function ($id){
+   return  dd(\App\Pedido::find($id)->user);
+});
+
+Route::get('/user/{id}/pedidos', function ($id){
+    return  dd(\App\User::find($id)->pedidos);
+});
+
+Route::get('/algoDelCiclo/{id}','PedidoController@algoDelCiclo');
+Route::get('/nadaDelCiclo/{id}','PedidoController@nadaDelCiclo');
