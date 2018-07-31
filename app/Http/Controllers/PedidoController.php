@@ -33,8 +33,8 @@ class PedidoController extends Controller
     public function pruebas($id,$segPar){
         $libro = new Libro($segPar,$segPar);
         $libro->setCicloId($id);
+        Pedido::limpiaErroresBBDD();
+        $libro->simulaAsignacion();
 
-        //$libro->simulaAsignacion();
-        Pedido::mañanaTardesMismoTipoMismoDia();
     }
 }

@@ -87,7 +87,7 @@ class Libro {
     }
 
     public static function UneMañanaTardes(){
-
+        return Pedido::mañanaTardesMismoTipoMismoDia();
     }
 
     /* Devuelve Collection de Pedidos de los asignados segun huecos que haya */
@@ -156,23 +156,21 @@ class Libro {
         echo "<br>Quedan ".json_encode($huecos_temp)." huecos<br>";
 
 
-
-        exit;
         $siguen_pidiendo = $todos_pedidos->diff($asignados);
 
-
-        $huecos_temp = $this->huecosInvariable;
         for($x=0;$x<8;$x++){ /* ahora por orden se van dando los huecos */
             $lasPeticiones = Pedido::sobreCicloQuePideSinAsignar($this->ciclo,$x);
             $cuantos_piden = $lasPeticiones->count();
             if ($cuantos_piden==0){
-                echo "NO SE PIDE NADIE: [".$que_pides[$x]."]<br>";
+                echo "NO SE PIDE NADIE: [".$this->que_pides[$x]."]<br>";
             } else if ($huecos_temp[$x]==0){
-                echo "NO HAY HUECOS: [".$que_pides[$x]."]<br>";
+                echo "NO HAY HUECOS: [".$this->que_pides[$x]."]<br>";
             } else if ($huecos_temp[$x]<$cuantos_piden){ //A pelear por los huecos
-                dd($this->dirimeEmpates($lasPeticiones,$huecos_temp[$x]));
+                echo "EMPATES: [".$this->que_pides[$x]."] ";
+                $this->dirimeEmpates($lasPeticiones,$huecos_temp[$x]);
+                echo "<br>";
             } else { //Huecos suficientes, todos se asignan...
-                echo "SI[".$que_pides[$x]."]: Huecos (".$huecos_temp[$x].") - (".$cuantos_piden.") Peticiones<br>";
+                echo "SI[".$this->que_pides[$x]."]: Huecos (".$huecos_temp[$x].") - (".$cuantos_piden.") Peticiones<br>";
                 $asignados = $asignados->concat($lasPeticiones);
                 $huecos_temp = disminuyeHuecos($huecos_temp, $x, false);
             }
