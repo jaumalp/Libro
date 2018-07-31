@@ -29,3 +29,7 @@ Route::get('/user/{id}/pedidos', function ($id){
 
 Route::get('/algoDelCiclo/{id}','PedidoController@algoDelCiclo');
 Route::get('/nadaDelCiclo/{id}','PedidoController@nadaDelCiclo');
+
+Route::get('simular/{id}','PedidoController@simular');
+
+Route::get('/prueba/{id}/{seg}', 'PedidoController@pruebas');
