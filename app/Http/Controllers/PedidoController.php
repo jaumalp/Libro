@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Pedido;
+use function App\showPeticiones;
 use App\User;
 use Illuminate\Http\Request;
 use App\Libro;
@@ -23,7 +24,8 @@ class PedidoController extends Controller
     public function simular($id){
         $libro = new Libro(4,3);
         $libro->setCicloId($id);
-        $libro->simulaAsignacion();
+        $ret = $libro->simulaAsignacion();
+        showPeticiones($ret[1]);
     }
 
 
@@ -31,10 +33,15 @@ class PedidoController extends Controller
 
 
     public function pruebas($id,$segPar){
+        //dd($probar);
+
         $libro = new Libro($segPar,$segPar);
         $libro->setCicloId($id);
-        Pedido::limpiaErroresBBDD();
-        $libro->simulaAsignacion();
+        $ret = Pedido::limpiaErroresBBDD();
+        $ret = $libro->simulaAsignacion();
+
+
+        showPeticiones($ret[1]);
 
     }
 }

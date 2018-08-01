@@ -40,18 +40,45 @@ class Pedido extends Model
 
     public static function limpiaErroresBBDD($iteraciones = 6){
         for ($x=0;$x<$iteraciones;$x++){
-            self::eliminaDuplicados();
-            self::diasAbsorbenJornadasMismoTipoMismoDia();
-            self::mañanaTardesMismoTipoMismoDia();
-            self::dosDiasYNocheIgualCiclo();
+            $ret = [0,0];
+           /* self::showModificaciones(self::eliminaDuplicados(),0);
+            self::showModificaciones(self::siPidesCicloNoPideNadaMas(),1);
+            self::showModificaciones(self::diasAbsorbenJornadasMismoTipoMismoDia(),2);
+            self::showModificaciones(self::mañanaTardesMismoTipoMismoDia(),3);
+            self::showModificaciones(self::dosDiasYNocheIgualCiclo(),4);*/
         }
+    }
+
+    public static function showModificaciones($parXY, $enQueFuncion){
+        $textos = ["ElimiaDuplicados", "SiPidesCiclo",
+            "diasAbsorbenJornadas", "MañanaTardes", "DosDiaYNoche"];
+        echo $textos[$enQueFuncion].": [+".$parXY[0].",-".$parXY[1]."]<br>";
+    }
+
+    public static function siPidesCicloNoPideNadaMas(){
+        $sql = "SELECT p1.id,p1.que_pide,p2.id as id2,p2.que_pide as que_pide2 FROM pedidos as p1,pedidos as p2 WHERE ";
+        $sql .= "p1.ciclo=p2.ciclo AND p1.user_id=p2.user_id AND ";
+        $sql .= "(p1.que_pide=0 AND p2.que_pide!=0)";
+        $temp = DB::select($sql);
+        $ret = [0,0];
+        foreach($temp as $par_de_ids){
+            if (isset($par_de_ids->id2)){
+                $pedido_temp2 = Pedido::find($par_de_ids->id2);
+                if ($pedido_temp2!=null){
+                    $pedido_temp2->delete();
+                    $ret[0]++;
+                }
+            }
+        }
+        return $ret;
     }
 
     public static function mañanaTardesMismoTipoMismoDia(){
         $sql = "SELECT p1.id,p2.id as id2 FROM pedidos as p1,pedidos as p2 WHERE ";
-        $sql .= "p1.ciclo=p2.ciclo AND p1.tipo=p2.tipo AND ";
+        $sql .= "p1.ciclo=p2.ciclo AND p1.tipo=p2.tipo AND p1.user_id=p2.user_id AND ";
         $sql .= "(p1.que_pide=3 AND p2.que_pide=4)";
         $temp = DB::select($sql);
+        $ret = [0,0];
         foreach($temp as $par_de_ids){
             if (isset($par_de_ids->id) and isset($par_de_ids->id2)) {
                 $pedido_temp1 = Pedido::find($par_de_ids->id);
@@ -63,6 +90,8 @@ class Pedido extends Model
                     $pedidoAMeter->save();
                     $pedido_temp1->delete();
                     $pedido_temp2->delete();
+                    $ret[0] += 2;
+                    $ret[1] += 1;
                 }
             }
         }
@@ -82,24 +111,28 @@ class Pedido extends Model
                     $pedidoAMeter->save();
                     $pedido_temp1->delete();
                     $pedido_temp2->delete();
+                    $ret[0] += 2;
+                    $ret[1] += 1;
                 }
             }
         }
 
-        return true;
+        return $ret;
     }
 
     public static function diasAbsorbenJornadasMismoTipoMismoDia(){
         $sql = "SELECT p1.id,p2.id as id2 FROM pedidos as p1,pedidos as p2 WHERE ";
-        $sql .= "p1.ciclo=p2.ciclo AND p1.tipo=p2.tipo AND ";
+        $sql .= "p1.ciclo=p2.ciclo AND p1.tipo=p2.tipo AND p1.user_id=p2.user_id AND ";
         $sql .= "(p1.que_pide=1 AND (p2.que_pide=4 OR p2.que_pide=3))";
         $temp = DB::select($sql);
+        $ret = [0,0];
         foreach($temp as $par_de_ids){
             if (isset($par_de_ids->id) and isset($par_de_ids->id2)) {
                 $pedido_temp1 = Pedido::find($par_de_ids->id);
                 $pedido_temp2 = Pedido::find($par_de_ids->id2);
                 if ($pedido_temp1!=null and $pedido_temp2!=null){
                     $pedido_temp2->delete();
+                    $ret[0]++;
                 }
             }
         }
@@ -114,11 +147,12 @@ class Pedido extends Model
                 $pedido_temp2 = Pedido::find($par_de_ids->id2);
                 if ($pedido_temp1!=null and $pedido_temp2!=null){
                     $pedido_temp2->delete();
+                    $ret[0]++;
                 }
             }
         }
 
-        return true;
+        return $ret;
     }
 
     public static function eliminaDuplicados(){
@@ -127,8 +161,7 @@ class Pedido extends Model
         $sql .= "p1.que_pide=p2.que_pide AND p1.user_id=p2.user_id";
     //    dd($sql);
         $temp = DB::select($sql);
-        $x = 0;
-        $y = 0;
+        $ret = [0,0];
         foreach($temp as $par_de_ids){
             if (isset($par_de_ids->id) and isset($par_de_ids->id2)) {
                 $pedido_temp1 = Pedido::find($par_de_ids->id);
@@ -137,29 +170,25 @@ class Pedido extends Model
                     $pedidoAMeter = $pedido_temp1->replicate();
                     $pedidoAMeter->push();
                     $pedidoAMeter->que_pide = 1;
-                    if ($pedidoAMeter->save())
-                        $y++;
-                    if ($pedido_temp1->delete())
-                        $x++;
-                    if ($pedido_temp2->delete())
-                        $x++;
-
+                    $pedidoAMeter->save();
+                    $pedido_temp1->delete();
+                    $pedido_temp2->delete();
+                    $ret[0] += 2;
+                    $ret[1]++;
                 }
             }
         }
-        echo "$x BORRADOS, $y GUARDADOS<br>";
-        return true;
+        return $ret;
     }
 
     public static function dosDiasYNocheIgualCiclo(){
         $sql = "SELECT p1.id,p1.que_pide,p2.id as id2,p2.que_pide,p3.id as id3,p3.que_pide,p1.ciclo,p2.ciclo,p3.ciclo ";
-        $sql .= "FROM pedidos as p1,pedidos as p2, pedidos as p3 WHERE ";
+        $sql .= "FROM pedidos as p1,pedidos as p2, pedidos as p3 WHERE p1.user_id=p2.user_id AND p1.user_id=p3.user_id AND ";
         $sql .= "p1.ciclo=p2.ciclo AND p2.ciclo=p3.ciclo AND p1.id!=p2.id AND p2.id!=p3.id AND ";
         $sql .= "p1.que_pide=1 AND p2.que_pide=2 AND p3.que_pide=7";
 
         $temp = DB::select($sql);
-        $x = 0;
-        $y = 0;
+        $ret = [0,0];
         foreach($temp as $par_de_ids){
             if (isset($par_de_ids->id) and isset($par_de_ids->id2) and isset($par_de_ids->id3)) {
                 $pedido_temp1 = Pedido::find($par_de_ids->id);
@@ -169,18 +198,15 @@ class Pedido extends Model
                     $pedidoAMeter = $pedido_temp1->replicate();
                     $pedidoAMeter->push();
                     $pedidoAMeter->que_pide = 0;
-                    if ($pedidoAMeter->save())
-                        $y++;
-                    if ($pedido_temp1->delete())
-                        $x++;
-                    if ($pedido_temp2->delete())
-                        $x++;
-                    if ($pedido_temp3->delete())
-                        $x++;
+                    $pedidoAMeter->save();
+                    $pedido_temp1->delete();
+                    $pedido_temp2->delete();
+                    $pedido_temp3->delete();
+                    $ret[0] += 3;
+                    $ret[1]++;
                 }
             }
         }
-        echo "$x BORRADOS, $y GUARDADOS<br>";
-        return true;
+        return $ret;
     }
 }
