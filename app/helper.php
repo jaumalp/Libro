@@ -44,8 +44,8 @@ function disminuyeHuecos($huecos_temp, $que_pide, $por_baja = false){
     ];
 
     $diagramaRestasNormal = [ [1,1,1,1,1,1,1,1], [0,1,0,1,1,0,0,0],
-        [0,0,1,0,0,1,1,0], [0,0,0,1,0,0,0,0], [0,0,0,0,1,0,0,0],
-        [0,0,0,0,0,1,0,0], [0,0,0,0,0,0,1,0], [0,0,0,0,0,0,0,1],
+        [0,0,1,0,0,1,1,0], [0,1,0,1,0,0,0,0], [0,1,0,0,1,0,0,0],
+        [0,0,1,0,0,1,0,0], [0,0,1,0,0,0,1,0], [0,0,0,0,0,0,0,1],
     ];
 
     if  ($por_baja)
@@ -79,6 +79,12 @@ function expresaElRetDeSimulacion($ret){
             } else {
                 echo "Todo se pide<br>";
             }
+
+            echo "<p><b>NO SE LLEVAN LO PEDIDO</b></p>";
+            showPeticiones($ret[4]);
+
+            echo "Despues de todas la asignaciones quedan los huecos: <br>";
+            echo json_encode($ret[5]);
         } else {
             "No se ha resuelto por un empate: <br>";
             foreach ($ret[1] as $user_id) {
@@ -248,7 +254,9 @@ class Libro {
         [0]     True            False                           NULL
         [1]     $asignados      $empatados                      NULL
         [2]     $noHayHuecos    NULL                            NULL
-        [3]     $noSePide       NULL                            NULL    */
+        [3]     $noSePide       NULL                            NULL
+        [4]     $noSeLlevan     NULL                            NULL
+        [5]     $huecos_temp    NULL                            NULL            */
     public function simulaAsignacion(){
         //INICIO DE VARIABLES
         $todos = \App\User::todosOrdenados();
@@ -272,6 +280,8 @@ class Libro {
         $todos = $bajasYLicencias->count();
         $sinRepetidos = $bajasYLicencias->groupby("user_id")->count();
         $huecos_temp[0] += $todos-$sinRepetidos; /* Devuelve los huecos por duplicados de Bajas */
+
+        echo json_encode($huecos_temp);
 
 
         $siguen_pidiendo = $todos_pedidos->diff($asignados);
@@ -297,10 +307,10 @@ class Libro {
                         $huecos_temp = disminuyeHuecos($huecos_temp, $x, false);
                 } else if ($resultado[0]->isnull()) {
                     //FALLO INESPERADO REVISAR
-                    return [null, null, null, null];
+                    return [null, null, null, null, null, null];
                 } else {
                     //NO SE PUDIERON DESEMPATAR $resultado[1] (Peticiones)
-                    return [false, $resultado[1], null, null];
+                    return [false, $resultado[1], null, null, null, null];
                 }
             } else { //HUECOS SUFICIENTES, TODOS SE ASIGNAN
                 $asignados = $asignados->concat($lasPeticiones);
@@ -310,6 +320,11 @@ class Libro {
         }
         //Si hemos llegado hasta aqui, la variable $asignados tiene a los afortunados
         //$noSePide y $noHayHuecos son autoexplicativas...
-        return [true, $asignados, $noHayHuecos, $noSePide];
+        for($x=0;$x<8;$x++)
+            if ($huecos_temp[$x]<0)
+                $huecos_temp[$x] = 0;
+
+        $noSeLlevan = $todos_pedidos->diff($asignados);
+        return [true, $asignados, $noHayHuecos, $noSePide, $noSeLlevan, $huecos_temp];
     }
 }
