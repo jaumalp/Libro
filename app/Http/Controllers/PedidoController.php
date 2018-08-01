@@ -13,23 +13,15 @@ use Illuminate\Support\Collection;
 
 class PedidoController extends Controller
 {
-
-    public function simular($id){
-        $libro = new Libro(4,3);
-        $libro->setCicloId($id);
+    public function simular($id_ciclo,$huecos_dia,$huecos_noche){
+        $libro = new Libro($huecos_dia,$huecos_noche);
+        $libro->setCicloId($id_ciclo);
+        Libro::limpiaBBDD();
         $ret = $libro->simulaAsignacion();
-        showPeticiones($ret[1]);
-        showPeticiones($ret[2]);
+        return view("simulacion",compact("ret"));
     }
 
-    public function pruebas($id,$segPar){
-        //dd($probar);
-
-        $libro = new Libro($segPar,$segPar);
-        $libro->setCicloId($id);
-        $ret = Pedido::limpiaErroresBBDD();
-        $ret = $libro->simulaAsignacion();
-
-        expresaElRetDeSimulacion($ret);
+    public function add(){
+        return view('pedidosView');
     }
 }

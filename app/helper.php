@@ -57,34 +57,39 @@ function disminuyeHuecos($huecos_temp, $que_pide, $por_baja = false){
 }
 
 
-function expresaElRetDeSimulacion($ret){
+function expresaElRetDeSimulacion($ret,$conHuecosEtc = false){
     $que_pides = ["Ciclo","Dia 1","Dia 2","Mañana 1","Tarde 1","Mañana 2","Tarde 2","Noche"];
 
     if ($ret[0]!=null) {
         if ($ret[0]) {
             echo "<p><b>SE LLEVAN DIAS:</b></p>";
             showPeticiones($ret[1]);
-            if ($ret[2]->count() > 0) {
-                foreach ($ret[2] as $q) {
-                    echo "No hay huecos para : " . $que_pides[$q]."<br>";
-                }
-            } else {
-                echo "Huecos para todos<br>";
-            }
 
-            if ($ret[3]->count() > 0) {
-                foreach ($ret[3] as $q) {
-                    echo "No se pide nadie : " . $que_pides[$q]."<br>";
+            if ($conHuecosEtc) {
+                if ($ret[2]->count() > 0) {
+                    foreach ($ret[2] as $q) {
+                        echo "No hay huecos para : " . $que_pides[$q] . "<br>";
+                    }
+                } else {
+                    echo "Huecos para todos<br>";
                 }
-            } else {
-                echo "Todo se pide<br>";
+
+                if ($ret[3]->count() > 0) {
+                    foreach ($ret[3] as $q) {
+                        echo "No se pide nadie : " . $que_pides[$q] . "<br>";
+                    }
+                } else {
+                    echo "Todo se pide<br>";
+                }
             }
 
             echo "<p><b>NO SE LLEVAN LO PEDIDO</b></p>";
             showPeticiones($ret[4]);
 
-            echo "Despues de todas la asignaciones quedan los huecos: <br>";
-            echo json_encode($ret[5]);
+            if ($conHuecosEtc) {
+                echo "Despues de todas la asignaciones quedan los huecos: <br>";
+                echo json_encode($ret[5]);
+            }
         } else {
             "No se ha resuelto por un empate: <br>";
             foreach ($ret[1] as $user_id) {
@@ -110,6 +115,10 @@ class Libro {
 
     public function __construct($dia = 9, $noche = 10){
         $this->setCuantosSeVan($dia,$noche);
+    }
+
+    public static function limpiaBBDD(){
+        Pedido::limpiaErroresBBDD();
     }
 
     public function setCuantosSeVan($dia, $noche){
@@ -280,9 +289,6 @@ class Libro {
         $todos = $bajasYLicencias->count();
         $sinRepetidos = $bajasYLicencias->groupby("user_id")->count();
         $huecos_temp[0] += $todos-$sinRepetidos; /* Devuelve los huecos por duplicados de Bajas */
-
-        echo json_encode($huecos_temp);
-
 
         $siguen_pidiendo = $todos_pedidos->diff($asignados);
 
