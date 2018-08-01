@@ -24,12 +24,13 @@ function restarArrays($minuendo, $sustraendo) {
 }
 
 function showPeticiones($peticiones){
-    $que_pides = ["C","D1","D2","M1","T1","M2","T2","N"];
+    $que_pides = ["Ciclo","Dia 1","Dia 2","Mañana 1","Tarde 1","Mañana 2","Tarde 2","Noche"];
     $tipos = ['Normal', 'Baja', 'Licencia'];
 
-    echo "<table><tr><td>USER</td><td>PIDE</td><td>MOTIVO</td></tr>";
+    echo "<table class='tabla_ejemplo' style='text-align: center'>
+<tr'><td> ID_PEDIDO </td><td> USER </td><td> SE LLEVA </td><td> MOTIVO </td></tr>";
     foreach ($peticiones as $p){
-        echo "<tr><td>".$p->user_id."</td><td>".$que_pides[$p->que_pide]."</td>";
+        echo "<tr><td>$p->id</td><td>$p->user_id</td><td>".$que_pides[$p->que_pide]."</td>";
         echo "<td>".$tipos[$p->tipo]."</td></tr>";
 
     }
@@ -55,6 +56,40 @@ function disminuyeHuecos($huecos_temp, $que_pide, $por_baja = false){
     return restarArrays($huecos_temp,$diagramaARestar);
 }
 
+
+function expresaElRetDeSimulacion($ret){
+    $que_pides = ["Ciclo","Dia 1","Dia 2","Mañana 1","Tarde 1","Mañana 2","Tarde 2","Noche"];
+
+    if ($ret[0]!=null) {
+        if ($ret[0]) {
+            echo "<p><b>SE LLEVAN DIAS:</b></p>";
+            showPeticiones($ret[1]);
+            if ($ret[2]->count() > 0) {
+                foreach ($ret[2] as $q) {
+                    echo "No hay huecos para : " . $que_pides[$q]."<br>";
+                }
+            } else {
+                echo "Huecos para todos<br>";
+            }
+
+            if ($ret[3]->count() > 0) {
+                foreach ($ret[3] as $q) {
+                    echo "No se pide nadie : " . $que_pides[$q]."<br>";
+                }
+            } else {
+                echo "Todo se pide<br>";
+            }
+        } else {
+            "No se ha resuelto por un empate: <br>";
+            foreach ($ret[1] as $user_id) {
+                $user_id . " - ";
+            }
+        }
+    }else {
+        echo "MEGA ERROR!!!";
+    }
+
+}
 
 class Libro {
     public $seVanDia, $seVanNoche, $ciclo;
@@ -85,10 +120,6 @@ class Libro {
         for ($x = 0; $x < 7; $x++)
             $this->huecosInvariable->push($this->seVanDia);
         $this->huecosInvariable->push($this->seVanNoche);
-    }
-
-    public static function UneMañanaTardes(){
-        return Pedido::mañanaTardesMismoTipoMismoDia();
     }
 
     public function devuelveHuecosPorRepeticion($asignados, $huecos_antes){
@@ -168,7 +199,6 @@ class Libro {
 
             $repes = $this->get_duplicates($comparativaSinRepetidos);
             if ($repes!=[]) {
-                echo "TENEMOS EMPATES ENTRE: " . json_encode($repes);
                 return [false,$repes];
             } else {
                 $ret = collect();
@@ -193,6 +223,7 @@ class Libro {
         }
     }
 
+    /* Devuelve array de Users_id */
     function get_duplicates( $arrayDeArrays ) {
         $array = [];
         foreach ($arrayDeArrays as $key => $valor)
@@ -224,7 +255,7 @@ class Libro {
         $no_piden = \App\User::noPidenNadaEnCiclo($this->ciclo);
         $si_piden = $todos->diff($no_piden);
         $this->rellenaHuecos();
-        $todos_pedidos = Pedido::sobreCicloTodos($this->ciclo);
+        $todos_pedidos = Pedido::sobreCicloTodos($this->ciclo, true);
         $asignados = collect();
         $noHayHuecos = collect();
         $noSePide = collect();
@@ -237,6 +268,11 @@ class Libro {
 
         foreach ($bajasYLicencias as $baja)
             $huecos_temp = disminuyeHuecos($huecos_temp, $baja->que_pide, true);
+
+        $todos = $bajasYLicencias->count();
+        $sinRepetidos = $bajasYLicencias->groupby("user_id")->count();
+        $huecos_temp[0] += $todos-$sinRepetidos; /* Devuelve los huecos por duplicados de Bajas */
+
 
         $siguen_pidiendo = $todos_pedidos->diff($asignados);
 

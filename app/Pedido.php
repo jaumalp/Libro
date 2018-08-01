@@ -16,7 +16,7 @@ class Pedido extends Model
     }
 
     /* Devuelve collection : Pedidos sobre ciclo con estado = $asignados */
-    public static function sobreCiclo($id_ciclo, $asignados = 1){
+    public static function sobreCiclo($id_ciclo, $estado = 0){
         return collect( Pedido::where('ciclo',$id_ciclo)->where('estado',$asignados)->get() );
     }
 
@@ -26,33 +26,26 @@ class Pedido extends Model
 
     /* Devuelve collection : Todos los pedidos sobre el ciclo */
     public static function sobreCicloTodos($id_ciclo){
-        return collect( Pedido::where('ciclo',$id_ciclo)->get() );
+        return collect( Pedido::where('ciclo',$id_ciclo)->where('estado',0)->get() );
     }
 
 
     public static function bajasSobreCiclo($id_ciclo){
-        return collect( Pedido::where('ciclo',$id_ciclo)->where('tipo',2)->get() );
+        return collect( Pedido::where('ciclo',$id_ciclo)->where('tipo',2)->where('estado',0)->get() );
     }
 
     public static function licenciasSobreCiclo($id_ciclo){
-        return collect( Pedido::where('ciclo',$id_ciclo)->where('tipo',1)->get() );
+        return collect( Pedido::where('ciclo',$id_ciclo)->where('tipo',1)->where('estado',0)->get() );
     }
 
     public static function limpiaErroresBBDD($iteraciones = 6){
         for ($x=0;$x<$iteraciones;$x++){
-            $ret = [0,0];
-           /* self::showModificaciones(self::eliminaDuplicados(),0);
-            self::showModificaciones(self::siPidesCicloNoPideNadaMas(),1);
-            self::showModificaciones(self::diasAbsorbenJornadasMismoTipoMismoDia(),2);
-            self::showModificaciones(self::mañanaTardesMismoTipoMismoDia(),3);
-            self::showModificaciones(self::dosDiasYNocheIgualCiclo(),4);*/
+            self::eliminaDuplicados();
+            self::siPidesCicloNoPideNadaMas();
+            self::diasAbsorbenJornadasMismoTipoMismoDia();
+            self::mañanaTardesMismoTipoMismoDia();
+            self::dosDiasYNocheIgualCiclo();
         }
-    }
-
-    public static function showModificaciones($parXY, $enQueFuncion){
-        $textos = ["ElimiaDuplicados", "SiPidesCiclo",
-            "diasAbsorbenJornadas", "MañanaTardes", "DosDiaYNoche"];
-        echo $textos[$enQueFuncion].": [+".$parXY[0].",-".$parXY[1]."]<br>";
     }
 
     public static function siPidesCicloNoPideNadaMas(){

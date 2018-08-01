@@ -16,8 +16,9 @@ class DatabaseSeeder extends Seeder
         factory(\App\User::class)->create(['name'=>'Jaime', 'email'=>'jaumalp@gmail.com']);
         factory(\App\User::class, 10)->create();
         factory(\App\Pedido::class,300)->create(['estado'=>'1']);
-        factory(\App\Pedido::class,5)->create(['ciclo'=>0, 'tipo'=>1]);
-        factory(\App\Pedido::class,20)->create(['ciclo'=>0, 'tipo'=>0]);
+        factory(\App\Pedido::class,4)->create(['ciclo'=>4, 'tipo'=>1]);
+        factory(\App\Pedido::class,2)->create(['ciclo'=>4, 'tipo'=>2]);
+        factory(\App\Pedido::class,20)->create(['ciclo'=>4, 'tipo'=>0]);
 
 
         for ($x=1;$x<10;$x++)

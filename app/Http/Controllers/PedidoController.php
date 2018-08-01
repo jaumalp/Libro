@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use function App\expresaElRetDeSimulacion;
 use App\Pedido;
 use function App\showPeticiones;
 use App\User;
@@ -12,25 +13,14 @@ use Illuminate\Support\Collection;
 
 class PedidoController extends Controller
 {
-    public static function algoDelCiclo($id_ciclo){
-        $todos = Pedido::sobreCiclo($id_ciclo, false);
-        return view('pedidos',compact('todos'));
-    }
-
-    public static function nadaDelCiclo($id_ciclo){
-        return view('usuarios',['todos' => Pedido::usersQueNoPidenCiclo($id_ciclo)]);
-    }
 
     public function simular($id){
         $libro = new Libro(4,3);
         $libro->setCicloId($id);
         $ret = $libro->simulaAsignacion();
         showPeticiones($ret[1]);
+        showPeticiones($ret[2]);
     }
-
-
-
-
 
     public function pruebas($id,$segPar){
         //dd($probar);
@@ -40,8 +30,6 @@ class PedidoController extends Controller
         $ret = Pedido::limpiaErroresBBDD();
         $ret = $libro->simulaAsignacion();
 
-
-        showPeticiones($ret[1]);
-
+        expresaElRetDeSimulacion($ret);
     }
 }
